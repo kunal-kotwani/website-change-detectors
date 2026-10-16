@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - {{ website["name"] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="top-bar">
+        <div>
+            <p class="small-heading">WEBSITE HISTORY</p>
+            <h1>{{ website["name"] }}</h1>
+            <p class="subtitle">{{ website["url"] }}</p>
+        </div>
+        <a class="button back-button" href="{{ url_for('index') }}">← Dashboard</a>
+    </header>
+
+    <main class="container">
+        <section class="panel">
+            <h2>Latest text difference</h2>
+            <p class="muted">This compares the two newest saved versions. A plus sign means text was added; a minus sign means text was removed.</p>
+
+            {% if difference %}
+                <pre class="diff-box">{% for line in difference %}{% if line.startswith('+') %}<span class="added">{{ line }}</span>{% elif line.startswith('-') %}<span class="removed">{{ line }}</span>{% else %}{{ line }}{% endif %}
+{% endfor %}</pre>
+            {% elif snapshots|length == 1 %}
+                <div class="empty-state small-empty">
+                    <h3>Only one version saved</h3>
+                    <p>When the page changes and a new snapshot is stored, the difference will appear here.</p>
+                </div>
+            {% else %}
+                <div class="empty-state small-empty">
+                    <h3>No versions saved yet</h3>
+                    <p>Try checking the website again later.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="panel">
+            <h2>Saved versions ({{ snapshots|length }})</h2>
+            {% if snapshots %}
+                {% for snapshot in snapshots %}
+                    <details class="snapshot">
+                        <summary>{{ snapshot["checked_at"] }}</summary>
+                        <p class="snapshot-text">{{ snapshot["page_text"] }}</p>
+                    </details>
+                {% endfor %}
+            {% else %}
+                <p class="muted">There are no snapshots for this page yet.</p>
+            {% endif %}
+        </section>
+        <p class="footer-note">Text snapshots are stored in the local changes.db file.</p>
+    </main>
+</body>
+</html>

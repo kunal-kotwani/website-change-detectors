@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Change Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="top-bar">
+        <div>
+            <p class="small-heading">A SIMPLE PYTHON PROJECT</p>
+            <h1>Website Change Detector</h1>
+            <p class="subtitle">Keep an eye on public web pages without checking them yourself.</p>
+        </div>
+        <div class="round-icon">↻</div>
+    </header>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="stats">
+            <div class="stat-card">
+                <p>Websites</p>
+                <h2>{{ total }}</h2>
+            </div>
+            <div class="stat-card">
+                <p>Marked changed</p>
+                <h2>{{ changed }}</h2>
+            </div>
+            <div class="stat-card">
+                <p>Errors</p>
+                <h2>{{ errors }}</h2>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Add a website</h2>
+            <p class="muted">Choose a public page you want to monitor.</p>
+            <form action="{{ url_for('add_website') }}" method="POST" class="add-form">
+                <label>
+                    Website name
+                    <input type="text" name="name" placeholder="Example: College notice page" required>
+                </label>
+                <label>
+                    Website URL
+                    <input type="url" name="url" placeholder="https://example.com" required>
+                </label>
+                <label>
+                    Check interval
+                    <select name="interval">
+                        <option value="15">Every 15 minutes</option>
+                        <option value="30">Every 30 minutes</option>
+                        <option value="60" selected>Every 1 hour</option>
+                        <option value="360">Every 6 hours</option>
+                        <option value="720">Every 12 hours</option>
+                        <option value="1440">Every 24 hours</option>
+                    </select>
+                </label>
+                <button type="submit">+ Add website</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <div class="section-heading">
+                <div>
+                    <h2>Your monitored websites</h2>
+                    <p class="muted">The first version is saved as a snapshot. Later checks are compared with it.</p>
+                </div>
+            </div>
+
+            {% if websites %}
+                <div class="website-list">
+                    {% for site in websites %}
+                        <article class="website-card">
+                            <div class="website-main">
+                                <div class="site-symbol">↗</div>
+                                <div class="site-info">
+                                    <h3>{{ site["name"] }}</h3>
+                                    <a href="{{ site['url'] }}" target="_blank" rel="noopener noreferrer">{{ site["url"] }}</a>
+                                    <p class="muted">Every {{ site["interval_minutes"] }} minutes · Last checked: {{ site["last_checked"] or "Not yet" }}</p>
+                                </div>
+                            </div>
+                            <div class="site-actions">
+                                <span class="status
+                                    {% if site['status'] == 'OK' %}ok
+                                    {% elif site['status'] == 'Changed' %}changed
+                                    {% elif site['status'].startswith('Error') %}error-status
+                                    {% else %}waiting{% endif %}">
+                                    {{ site["status"] }}
+                                </span>
+                                <a class="button secondary" href="{{ url_for('history', website_id=site['id']) }}">History</a>
+                                <form action="{{ url_for('check_now', website_id=site['id']) }}" method="POST">
+                                    <button class="button secondary" type="submit">Check now</button>
+                                </form>
+                                <form action="{{ url_for('delete_website', website_id=site['id']) }}" method="POST" onsubmit="return confirm('Remove this website and its saved history?');">
+                                    <button class="button danger" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">◎</div>
+                    <h3>No websites yet</h3>
+                    <p>Add a public page above and your first snapshot will be saved automatically.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <p class="footer-note">Made with Python, Flask and SQLite · Beginner project</p>
+    </main>
+</body>
+</html>
